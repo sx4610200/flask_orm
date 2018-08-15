@@ -15,19 +15,22 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.name
 
+
+
 #查
 @app.route('/get/', methods=['GET'])
 def get_list():
-    dict = {}
-    list=[]
+
+    list = []
     items = User.query.all()
     print(items)
     for ite in items:
+        dict = {}
         dict['items_name'] = ite.name
         dict['id'] = ite.id
         list.append(dict)
-    print(list)
-    return jsonify(list)
+        print(list)
+    return jsonify({'result': list})
 
 #查
 @app.route('/get/<int:uid>', methods=['GET'])
@@ -44,17 +47,19 @@ def getuid_list(uid):
 #改(更新)
 @app.route('/put/<int:uid>', methods=['PUT'])
 def put_list(uid):
-    item = User.query.filter_by(id=uid)
+    print(uid)
+    item = User.query.filter_by(id=uid).first()
     item.id = request.json.get('id')
     item.name = request.json.get('name')
     dict={}
     dict['id'] = item.id
     dict['name'] = item.name
-    return jsonify({'result':dict})
+    return jsonify({'result': dict})
 
 
 
 
 if __name__ == '__main__':
+    # db.create_all()
     print("=============")
     app.run()
