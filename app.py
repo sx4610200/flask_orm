@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,make_response
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -15,12 +15,14 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.name
 
-
+#使404变成更好看的json格式
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
 
 #查
 @app.route('/get/', methods=['GET'])
 def get_list():
-
     list = []
     items = User.query.all()
     print(items)
@@ -29,7 +31,6 @@ def get_list():
         dict['items_name'] = ite.name
         dict['id'] = ite.id
         list.append(dict)
-        print(list)
     return jsonify({'result': list})
 
 #查
@@ -51,13 +52,27 @@ def put_list(uid):
     item = User.query.filter_by(id=uid).first()
     item.id = request.json.get('id')
     item.name = request.json.get('name')
-    dict={}
-    dict['id'] = item.id
-    dict['name'] = item.name
-    return jsonify({'result': dict})
+    db.session.add(item)
+    db.session.commit()
+    return jsonify({'result': 'success'})
 
+#创建(插入)
+@app.route('/post/', methods=['POST'])
+def post_list():
+    new_dict = User(name=request.json['name'])
+    print(new_dict)
+    print(new_dict.id)
+    print(new_dict.name)
+    db.session.add(new_dict)
+    db.session.commit()
+    return jsonify({'result': 'add success'})
 
-
+@app.route('/delete/<int:uid>',methods=['DELETE'])
+def delete_list(uid):
+    item=User.query.filter_by(id=uid).first()
+    db.session.delete(item)
+    db.session.commit()
+    return "delete success"
 
 if __name__ == '__main__':
     # db.create_all()
